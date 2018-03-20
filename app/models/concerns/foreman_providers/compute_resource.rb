@@ -8,28 +8,54 @@ module ForemanProviders
       before_destroy :destroy_provider
     end
 
-    def create_provider
-      provider_klass = foreman_type_to_provider_type.constantize
+    def vms(opts = {})
+      miq_connection.vms
+    end
 
-      ems = provider_klass.new(:name => name)
-      ems.authentications << Providers::Authentication.new(:authtype => "default", :userid => user, :password => password)
-      ems.endpoints       << Providers::Endpoint.new(:role => "default", :hostname => URI(url).host, :verify_ssl => 0)
-      ems.compute_resource = self
-      ems.save!
+    def create_provider
+      provider = miq_connection.providers.find_by(:type => provider_klass, :hostname => hostname, :name => name)
+      return unless provider.nil?
+
+      miq_connection.providers.create(
+        :name        => name,
+        :hostname    => hostname,
+        :type        => provider_klass,
+        :credentials => {
+          :userid   => user,
+          :password => password,
+        }
+      )
     end
 
     def destroy_provider
-      provider_klass = foreman_type_to_provider_type.constantize
-      provider_klass.find_by(:name => name).try(:destroy)
+      provider = miq_connection.providers.find_by(:type => provider_klass, :hostname => hostname, :name => name)
+      provider.try(:delete)
+    end
+
+    def miq_connection
+      @connection ||= miq_connect
+    end
+
+    def miq_connect(server: 'localhost', port: 4000, user: 'admin', password: 'smartvm')
+      require 'manageiq/api/client'
+      ManageIQ::API::Client.new(:url => "http://#{server}:#{port}", :user => user, :password => password)
+    end
+
+    def provider_klass
+      @provider_klass ||= foreman_type_to_provider_type
     end
 
     def foreman_type_to_provider_type
       case type
       when "Foreman::Model::Ovirt"
-        "Providers::Ovirt::Manager"
+        "ManageIQ::Providers::Redhat::InfraManager"
       when "Foreman::Model::Openstack"
-        "Providers::Openstack::Manager"
+        "ManageIQ::Providers::Openstack::CloudManager"
       end
+    end
+
+    def hostname
+      @hostname ||= URI(url).host
     end
   end
 end
