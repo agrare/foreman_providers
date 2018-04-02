@@ -9,17 +9,20 @@ module ForemanProviders
     end
 
     def vms(opts = {})
-      miq_connection.vms
+      miq_connection.providers.get(:attributes => "vms").find(miq_provider.id)
+    end
+
+    def find_vm_by_uuid(uuid)
+      miq_connection.vms.find_by(:ems_id => miq_provider_id, :uid_ems => uuid)
     end
 
     def create_provider
-      provider = miq_connection.providers.find_by(:type => provider_klass, :hostname => hostname, :name => name)
-      return unless provider.nil?
+      return unless miq_provider.nil?
 
-      miq_connection.providers.create(
+      @provider = miq_connection.providers.create(
         :name        => name,
-        :hostname    => hostname,
-        :type        => provider_klass,
+        :hostname    => URI(url).host,
+        :type        => miq_provider_klass,
         :credentials => {
           :userid   => user,
           :password => password,
@@ -28,8 +31,7 @@ module ForemanProviders
     end
 
     def destroy_provider
-      provider = miq_connection.providers.find_by(:type => provider_klass, :hostname => hostname, :name => name)
-      provider.try(:delete)
+      miq_provider.try(:delete)
     end
 
     def miq_connection
@@ -41,8 +43,12 @@ module ForemanProviders
       ManageIQ::API::Client.new(:url => "http://#{server}:#{port}", :user => user, :password => password)
     end
 
-    def provider_klass
+    def miq_provider_klass
       @provider_klass ||= foreman_type_to_provider_type
+    end
+
+    def miq_provider
+      @provider ||= miq_connection.providers.find_by(:type => miq_provider_klass, :hostname => URI(url).host, :name => name)
     end
 
     def foreman_type_to_provider_type
@@ -52,10 +58,6 @@ module ForemanProviders
       when "Foreman::Model::Openstack"
         "ManageIQ::Providers::Openstack::CloudManager"
       end
-    end
-
-    def hostname
-      @hostname ||= URI(url).host
     end
   end
 end
