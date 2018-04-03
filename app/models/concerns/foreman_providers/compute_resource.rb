@@ -8,6 +8,10 @@ module ForemanProviders
       before_destroy :destroy_provider
     end
 
+    def virt_hosts(opts = {})
+      miq_connection.providers.get(:attributes => "hosts").find(miq_provider.id)
+    end
+
     def vms(opts = {})
       miq_connection.providers.get(:attributes => "vms").find(miq_provider.id)
     end
