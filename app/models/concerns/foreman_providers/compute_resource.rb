@@ -24,10 +24,11 @@ module ForemanProviders
       return unless miq_provider.nil?
 
       @provider = miq_connection.providers.create(
-        :name        => name,
-        :hostname    => URI(url).host,
-        :type        => miq_provider_klass,
-        :credentials => {
+        :name                  => name,
+        :hostname              => URI(url).host,
+        :type                  => miq_provider_klass,
+        :certificate_authority => self.public_key,
+        :credentials           => {
           :userid   => user,
           :password => password,
         }
