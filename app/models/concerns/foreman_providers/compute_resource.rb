@@ -43,9 +43,11 @@ module ForemanProviders
       @connection ||= miq_connect
     end
 
-    def miq_connect(server: 'localhost', port: 4000, user: 'admin', password: 'smartvm')
+    def miq_connect(scheme: 'http', host: 'localhost', port: 4000, user: 'admin', password: 'smartvm')
+      url = URI::Generic.build(:scheme => scheme, :host => host, :port => port).to_s
+
       require 'manageiq/api/client'
-      ManageIQ::API::Client.new(:url => "http://#{server}:#{port}", :user => user, :password => password)
+      ManageIQ::API::Client.new(:url => url, :user => user, :password => password, :ssl => {verify: false})
     end
 
     def miq_provider_klass
