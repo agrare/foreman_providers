@@ -15,6 +15,10 @@ module ForemanProviders
       end
     end
 
+    initializer 'foreman_providers.load_settings', :before => :load_config_initializers do
+      require_dependency config.root.join('app', 'models', 'setting', 'providers.rb').to_s if (Setting.table_exists? rescue(false))
+    end
+
     initializer 'foreman_providers.register_plugin', :before => :finisher_hook do |app|
       require 'extensions/descendant_loader'
 
