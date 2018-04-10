@@ -9,15 +9,15 @@ module ForemanProviders
     end
 
     def virt_hosts(opts = {})
-      miq_connection.providers.get(:attributes => "hosts").find(miq_provider.id)
+      miq_connection.hosts.where(:ems_id => miq_provider.id)
     end
 
     def vms(opts = {})
-      miq_connection.providers.get(:attributes => "vms").find(miq_provider.id)
+      miq_connection.vms.where(:ems_id => miq_provider.id)
     end
 
     def find_vm_by_uuid(uuid)
-      miq_connection.vms.find_by(:ems_id => miq_provider_id, :uid_ems => uuid)
+      miq_connection.vms.find_by(:ems_id => miq_provider.id, :uid_ems => uuid)
     end
 
     def create_provider
@@ -44,13 +44,13 @@ module ForemanProviders
     end
 
     def miq_connect
-      scheme = Settings[:providers_service_scheme]
-      host   = Settings[:providers_service_host]
-      port   = Settings[:providers_service_port]
+      scheme = Setting[:providers_service_scheme]
+      host   = Setting[:providers_service_host]
+      port   = Setting[:providers_service_port]
       url    = URI::Generic.build(:scheme => scheme, :host => host, :port => port).to_s
 
-      user     = Settings[:providers_service_user]
-      password = Settings[:providers_service_password]
+      user     = Setting[:providers_service_user]
+      password = Setting[:providers_service_password]
 
       require 'manageiq/api/client'
       ManageIQ::API::Client.new(:url => url, :user => user, :password => password, :ssl => {verify: false})
