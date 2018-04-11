@@ -1,3 +1,5 @@
+require 'deface'
+
 module ForemanProviders
   class Engine < ::Rails::Engine
     engine_name 'foreman_providers'
