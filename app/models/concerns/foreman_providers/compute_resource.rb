@@ -44,13 +44,13 @@ module ForemanProviders
     end
 
     def miq_connect
-      scheme = Setting[:providers_service_scheme]
-      host   = Setting[:providers_service_host]
-      port   = Setting[:providers_service_port]
+      scheme = ENV['PROVIDERS_SERVICE_SCHEME'] || Setting[:providers_service_scheme]
+      host   = ENV['PROVIDERS_SERVICE_HOST'] || Setting[:providers_service_host]
+      port   = ENV['PROVIDERS_SERVICE_PORT'] || Setting[:providers_service_port]
       url    = URI::Generic.build(:scheme => scheme, :host => host, :port => port).to_s
 
-      user     = Setting[:providers_service_user]
-      password = Setting[:providers_service_password]
+      user     = ENV['PROVIDERS_SERVICE_USER'] || Setting[:providers_service_user]
+      password = ENV['PROVIDERS_SERVICE_PASSWORD'] || Setting[:providers_service_password]
 
       require 'manageiq/api/client'
       ManageIQ::API::Client.new(:url => url, :user => user, :password => password, :ssl => {verify: false})
