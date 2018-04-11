@@ -1,11 +1,8 @@
 module ForemanProviders
-  # Example: Plugin's HostsController inherits from Foreman's HostsController
-  class HostsController < ::HostsController
-    # change layout if needed
-    # layout 'foreman_providers/layouts/new_layout'
-
-    def new_action
-      # automatically renders view/foreman_providers/hosts/new_action
+  class HostsController < ::ApplicationController
+    def index
+      @hosts = ::ComputeResource.unscoped.find_by(id: params[:compute_resource_id]).virt_hosts
+      render :partial => 'foreman_providers/hosts/list'
     end
   end
 end

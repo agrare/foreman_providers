@@ -1,0 +1,14 @@
+<table class="<%= table_css_classes %>" data-table="inline">
+  <thead>
+    <tr>
+      <th width="25%"><%= _('Name') %></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @templates.each do |template| %>
+      <tr>
+        <td class="ellipsis"><%= template.name %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

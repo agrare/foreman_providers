@@ -1,0 +1,11 @@
+<div class="row" id="about">
+    <div class="col-md-5">
+        <div id="properties">
+            <%= render partial: 'foreman_providers/vms/properties', locals: {vm: vm} %>
+        </div>
+
+        <div id="power">
+            <%= render partial: 'foreman_providers/common/power', locals: {obj: vm} %>
+        </div>
+    </div>
+</div>
