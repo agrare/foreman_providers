@@ -53,6 +53,7 @@ module ForemanProviders
       password = Setting[:providers_service_password]
 
       require 'manageiq/api/client'
+      require 'extensions/fog_shim'
       ManageIQ::API::Client.new(:url => url, :user => user, :password => password, :ssl => {verify: false})
     end
 
@@ -62,6 +63,10 @@ module ForemanProviders
 
     def miq_provider
       @provider ||= miq_connection.providers.find_by(:type => miq_provider_klass, :hostname => URI(url).host, :name => name)
+    end
+
+    def associated_host(vm)
+      Host.authorized(:view_hosts, Host).find_by(name: vm.name)
     end
 
     def foreman_type_to_provider_type

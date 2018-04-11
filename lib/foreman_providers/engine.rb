@@ -2,7 +2,7 @@ module ForemanProviders
   class Engine < ::Rails::Engine
     engine_name 'foreman_providers'
 
-    config.autoload_paths += Dir["#{config.root}/app/controllers/concerns"]
+    config.autoload_paths += Dir["#{config.root}/app/controllers"]
     config.autoload_paths += Dir["#{config.root}/app/helpers/concerns"]
     config.autoload_paths += Dir["#{config.root}/app/models/concerns"]
     config.autoload_paths += Dir["#{config.root}/app/models/mixins"]
@@ -36,13 +36,6 @@ module ForemanProviders
         # Add a new role called 'Discovery' if it doesn't exist
         role 'ForemanProviders', [:view_foreman_providers]
 
-        # add menu entry
-        menu :top_menu, :template,
-             url_hash: { controller: :'foreman_providers/hosts', action: :new_action },
-             caption: 'ForemanProviders',
-             parent: :hosts_menu,
-             after: :hosts
-
         # add dashboard widget
         widget 'foreman_providers_widget', name: N_('Foreman plugin template widget'), sizex: 4, sizey: 1
       end
@@ -67,7 +60,7 @@ module ForemanProviders
     # Include concerns in this config.to_prepare block
     config.to_prepare do
       begin
-        Foreman::Model::Ovirt.include(ForemanProviders::ComputeResource)
+        Foreman::Model::Ovirt.prepend(ForemanProviders::ComputeResource)
         Foreman::Model::Openstack.include(ForemanProviders::ComputeResource)
       rescue => e
         Rails.logger.warn "ForemanProviders: skipping engine hook (#{e})"

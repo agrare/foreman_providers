@@ -1,0 +1,28 @@
+<table class="<%= table_css_classes %>">
+    <thead>
+        <tr>
+            <th align="left" colspan="2">Properties</th>
+        </tr>
+    </thead>
+
+    <tr>
+        <td width="33%">Name</td>
+        <td width="67%"><%= vm.name %></td>
+    </tr>
+    <tr>
+        <td>Hostname</td>
+        <td><%= vm.hostname %></td>
+    </tr>
+    <tr>
+        <td>IP Addresses</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Operation System</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Management Engine GUID</td>
+        <td><%= vm.uid_ems %></td>
+    </tr>
+</table>
