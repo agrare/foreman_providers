@@ -1,0 +1,27 @@
+<% disks.each do |disk| %>
+    <table class="<%= table_css_classes %>">
+        <thead>
+            <tr><th align="left" colspan="2">Disk</td></tr>
+        </thead>
+
+        <tr>
+            <td width="33%">Controller type</td>
+            <td width="67%"><%= disk.controller_type %></td>
+        </tr>
+
+        <tr>
+            <td>Size</td>
+            <td><%= number_to_human_size(disk.size) %></td>
+        </tr>
+
+        <tr>
+            <td>Size on disk</td>
+            <td><%= number_to_human_size(disk.size_on_disk) %></td>
+        </tr>
+
+        <tr>
+            <td>Disk type</td>
+            <td><%= disk.disk_type %></td>
+        </tr>
+    </table>
+<% end %>

@@ -1,0 +1,20 @@
+<table class="<%= table_css_classes %>">
+    <thead>
+        <tr><th align="left" colspan="2">Power Management</td></tr>
+    </thead>
+
+    <tr>
+        <td width="33%">Power Management</td>
+        <td width="67%"><span title="<%= obj.power_state %>" class="fa fa-power-off host-power-status <%= obj.power_state %>"</span> <%= obj.power_state %></td>
+    </tr>
+
+    <tr>
+        <td>Last Boot Time</td>
+        <td><%= obj.boot_time %></td>
+    </tr>
+
+    <tr>
+        <td>State changed on</td>
+        <td><%= obj.state_changed_on %></td>
+    </tr>
+</table>

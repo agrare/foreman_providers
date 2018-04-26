@@ -1,8 +1,10 @@
+require 'deface'
+
 module ForemanProviders
   class Engine < ::Rails::Engine
     engine_name 'foreman_providers'
 
-    config.autoload_paths += Dir["#{config.root}/app/controllers/concerns"]
+    config.autoload_paths += Dir["#{config.root}/app/controllers"]
     config.autoload_paths += Dir["#{config.root}/app/helpers/concerns"]
     config.autoload_paths += Dir["#{config.root}/app/models/concerns"]
     config.autoload_paths += Dir["#{config.root}/app/models/mixins"]
@@ -13,6 +15,10 @@ module ForemanProviders
       ForemanProviders::Engine.paths['db/migrate'].existent.each do |path|
         app.config.paths['db/migrate'] << path
       end
+    end
+
+    initializer 'foreman_providers.load_settings', :before => :load_config_initializers do
+      require_dependency config.root.join('app', 'models', 'setting', 'providers.rb').to_s if (Setting.table_exists? rescue(false))
     end
 
     initializer 'foreman_providers.register_plugin', :before => :finisher_hook do |app|
@@ -31,13 +37,6 @@ module ForemanProviders
 
         # Add a new role called 'Discovery' if it doesn't exist
         role 'ForemanProviders', [:view_foreman_providers]
-
-        # add menu entry
-        menu :top_menu, :template,
-             url_hash: { controller: :'foreman_providers/hosts', action: :new_action },
-             caption: 'ForemanProviders',
-             parent: :hosts_menu,
-             after: :hosts
 
         # add dashboard widget
         widget 'foreman_providers_widget', name: N_('Foreman plugin template widget'), sizex: 4, sizey: 1

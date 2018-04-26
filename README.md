@@ -7,50 +7,52 @@ Adds ManageIQ Providers and Inventory to Foreman
 The provider plugins are on GitHub here:
 
 ```bash
-https://github.com/agrare/foreman_providers
-https://github.com/agrare/foreman_providers_infra
-https://github.com/agrare/foreman_providers_ovirt
-https://github.com/jameswnl/foreman_providers_cloud
-https://github.com/jameswnl/foreman_providers_openstack
+git clone https://github.com/agrare/foreman_providers.git -b link_compute_resources_and_providers
 ```
 
 Add the provider plugins to your Foreman bundler.d/ directory:
 
 ```bash
-echo 'gem "ovirt" # require the ovirt gem early to workaround issues with rbovirt
-gem "foreman_providers",           :git => "https://github.com/agrare/foreman_providers"
-gem "foreman_providers_infra",     :git => "https://github.com/agrare/foreman_providers_infra"
-gem "foreman_providers_cloud",     :git => "https://github.com/jameswnl/foreman_providers_cloud.git"
-gem "foreman_providers_ovirt",     :git => "https://github.com/agrare/foreman_providers_ovirt"
-gem "foreman_providers_openstack", :git => "https://github.com/jameswnl/foreman_providers_openstack"' > bundler.d/provider.rb
+gem "foreman_providers",      :path => "../foreman_providers"
 ```
 
 Update your foreman gems and database
 
 ```bash
 bundle update
-bin/rails db:migrate
+```
+
+Install minishift using the installation guide https://docs.openshift.org/latest/minishift/getting-started/installing.html
+It is recommended to give at least 8GiB of RAM and 2-4 CPUs to the minishift appliance.
+
+Clone the manageiq-pods repo and setup the dependent templates and user permissions
+
+```bash
+git clone https://github.com/ManageIQ/manageiq-pods
+
+eval $(minishift oc-env)
+eval $(minishift docker-env)
+
+namespace='myproject'
+
+oc login -u system:admin
+
+oc adm policy add-scc-to-user anyuid system:serviceaccount:$namespace:miq-anyuid
+oc adm policy add-scc-to-user anyuid system:serviceaccount:$namespace:miq-orchestrator
+oc adm policy add-scc-to-user privileged system:serviceaccount:$namespace:miq-privileged
+oc create -f manageiq-pods/templates/miq-scc-sysadmin.yaml
+oc adm policy add-scc-to-user miq-sysadmin system:serviceaccount:$namespace:miq-httpd
+
+oc create -f manageiq-pods/templates/miq-template.yaml
+
+oc new-app --template=manageiq -p APPLICATION_CPU_REQ=500m -p APPLICATION_MEM_REQ=2Gi -p POSTGRESQL_CPU_REQ=250m -p POSTGRESQL_MEM_REQ=2Gi -p MEMCACHED_CPU_REQ=100m -p MEMCACHED_MEM_REQ=64Mi -p HTTPD_CPU_REQ=250m -p HTTPD_MEM_REQ=256Mi
 ```
 
 ## Usage
 
-Add a new Ovirt ComputeResource and a new Provider will be automatically created for you
+Go to the Settings/Providers tab and set the providers_service_scheme to `https`, the providers_service_host to the dns name of your manageiq app, e.g. `httpd-myproject.192.168.42.42.nip.io`, and the providers_service_port to 443.
 
-Refresh your provider inventory
-
-```bash
-bin/rails runner 'Providers::Ovirt::Manager.first.refresh'
-```
-
-This should automatically create managed hosts from the Ovirt Hosts and VMs in your inventory.
-
-Additionally there may be more VMs that aren't listed if they don't have an IP address that was detected.
-
-These VMs are in the `Providers::Infra::Vm` model, templates are in the `Providers::Infra::Template` model, and hosts in (wait for it) `Providers::Infra::Host`.
-
-## TODO
-
-*Todo list here*
+Now add a new Ovirt ComputeResource and a new Provider will be automatically created for you and the API will be used to retrieve VMs and Hosts.
 
 ## Contributing
 

@@ -8,27 +8,73 @@ module ForemanProviders
       before_destroy :destroy_provider
     end
 
-    def create_provider
-      provider_klass = foreman_type_to_provider_type.constantize
+    def virt_hosts(opts = {})
+      miq_connection.hosts.where(:ems_id => miq_provider.id)
+    end
 
-      ems = provider_klass.new(:name => name)
-      ems.authentications << Providers::Authentication.new(:authtype => "default", :userid => user, :password => password)
-      ems.endpoints       << Providers::Endpoint.new(:role => "default", :hostname => URI(url).host, :verify_ssl => 0)
-      ems.compute_resource = self
-      ems.save!
+    def vms(opts = {})
+      miq_connection.vms.where(:ems_id => miq_provider.id)
+    end
+
+    def find_vm_by_uuid(uuid)
+      miq_connection.vms.find_by(:ems_id => miq_provider.id, :uid_ems => uuid)
+    end
+
+    def create_provider
+      return unless miq_provider.nil?
+
+      @provider = miq_connection.providers.create(
+        :name                  => name,
+        :hostname              => URI(url).host,
+        :type                  => miq_provider_klass,
+        :certificate_authority => self.public_key,
+        :credentials           => {
+          :userid   => user,
+          :password => password,
+        }
+      )
     end
 
     def destroy_provider
-      provider_klass = foreman_type_to_provider_type.constantize
-      provider_klass.find_by(:name => name).try(:destroy)
+      miq_provider.try(:delete)
+    end
+
+    def miq_connection
+      @connection ||= miq_connect
+    end
+
+    def miq_connect
+      scheme = ENV['PROVIDERS_SERVICE_SCHEME'] || Setting[:providers_service_scheme]
+      host   = ENV['PROVIDERS_SERVICE_HOST'] || Setting[:providers_service_host]
+      port   = ENV['PROVIDERS_SERVICE_PORT'] || Setting[:providers_service_port]
+      url    = URI::Generic.build(:scheme => scheme, :host => host, :port => port).to_s
+
+      user     = ENV['PROVIDERS_SERVICE_USER'] || Setting[:providers_service_user]
+      password = ENV['PROVIDERS_SERVICE_PASSWORD'] || Setting[:providers_service_password]
+
+      require 'manageiq/api/client'
+      require 'extensions/fog_shim'
+      ManageIQ::API::Client.new(:url => url, :user => user, :password => password, :ssl => {verify: false})
+    end
+
+    def miq_provider_klass
+      @provider_klass ||= foreman_type_to_provider_type
+    end
+
+    def miq_provider
+      @provider ||= miq_connection.providers.find_by(:type => miq_provider_klass, :hostname => URI(url).host, :name => name)
+    end
+
+    def associated_host(vm)
+      Host.authorized(:view_hosts, Host).find_by(name: vm.name)
     end
 
     def foreman_type_to_provider_type
       case type
       when "Foreman::Model::Ovirt"
-        "Providers::Ovirt::Manager"
+        "ManageIQ::Providers::Redhat::InfraManager"
       when "Foreman::Model::Openstack"
-        "Providers::Openstack::Manager"
+        "ManageIQ::Providers::Openstack::CloudManager"
       end
     end
   end

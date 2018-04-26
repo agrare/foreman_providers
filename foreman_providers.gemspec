@@ -15,6 +15,9 @@ Gem::Specification.new do |s|
   s.test_files = Dir['test/**/*']
 
   s.add_runtime_dependency     'ripper_ruby_parser', '~>1.2.0'
+  s.add_runtime_dependency     'manageiq-api-client', '~>0.3.0'
+  s.add_runtime_dependency     'deface', '< 2.0'
+
   s.add_development_dependency 'rubocop'
   s.add_development_dependency 'rdoc'
 end
